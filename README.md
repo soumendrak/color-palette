@@ -10,10 +10,10 @@
   </p>
 
   <p>
-    <a href="#"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-    <a href="#"><img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Build Status"></a>
-    <a href="#"><img src="https://img.shields.io/badge/zero-dependencies-ff69b4.svg" alt="Zero Dependencies"></a>
-    <a href="#"><img src="https://img.shields.io/badge/PRs-welcome-8A2BE2.svg" alt="PRs Welcome"></a>
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+    <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Build Status">
+    <img src="https://img.shields.io/badge/zero-dependencies-ff69b4.svg" alt="Zero Dependencies">
+    <a href="https://github.com/soumendrak/color-palette/pulls"><img src="https://img.shields.io/badge/PRs-welcome-8A2BE2.svg" alt="PRs Welcome"></a>
   </p>
 
   <p>
@@ -55,7 +55,7 @@ Open `index.html` in any browser — that's it.
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/color-palette.git
+git clone https://github.com/soumendrak/color-palette.git
 cd color-palette
 
 # Open directly — no server needed
