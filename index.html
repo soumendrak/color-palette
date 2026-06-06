@@ -360,10 +360,62 @@
     .palette-header h2 { font-size: 0.9rem; }
     .hex-input { width: 100px; font-size: 1rem; }
     .preview-labels { padding: 0.7rem 1rem; gap: 0.8rem; font-size: 0.8rem; }
+    .wcag-section { padding: 0.7rem 1rem; }
+    .wcag-row { gap: 1rem; }
+    .wcag-label { min-width: 70px; font-size: 0.7rem; }
+    .wcag-ratio { font-size: 0.75rem; min-width: 2.8rem; }
   }
 
   @media (max-width: 400px) {
     .swatch { min-width: 32px; height: 65px; }
+  }
+
+  /* ─── WCAG Contrast ─── */
+  .wcag-section {
+    padding: 0.9rem 1.5rem;
+    background: var(--surface-2);
+    border-top: 1px solid var(--surface-3);
+  }
+  .wcag-row {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .wcag-pair {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .wcag-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    min-width: 90px;
+  }
+  .wcag-ratio {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 3.5rem;
+  }
+  .wcag-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .wcag-badge.pass { background: #1b6b2b; color: #7ee89a; }
+  .wcag-badge.fail { background: #6b1b1b; color: #e87a7a; }
+  .wcag-legend {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 0.3rem;
+    font-size: 0.65rem;
+    color: var(--text-muted);
   }
 
   /* ─── Animations ─── */
@@ -414,6 +466,28 @@
         <span>HEX: <strong id="label-hex">#A78BFA</strong></span>
         <span>RGB: <strong id="label-rgb">167, 139, 250</strong></span>
         <span>HSL: <strong id="label-hsl">255°, 92%, 76%</strong></span>
+      </div>
+      <!-- WCAG Contrast -->
+      <div class="wcag-section" id="wcag-section">
+        <div class="wcag-row">
+          <div class="wcag-pair">
+            <span class="wcag-label">Black on color</span>
+            <span class="wcag-ratio" id="wcag-black-ratio">—</span>
+            <span class="wcag-badge" id="wcag-black-aa-n">—</span>
+            <span class="wcag-badge" id="wcag-black-aa-l">—</span>
+            <span class="wcag-badge" id="wcag-black-aaa">—</span>
+          </div>
+          <div class="wcag-pair">
+            <span class="wcag-label">White on color</span>
+            <span class="wcag-ratio" id="wcag-white-ratio">—</span>
+            <span class="wcag-badge" id="wcag-white-aa-n">—</span>
+            <span class="wcag-badge" id="wcag-white-aa-l">—</span>
+            <span class="wcag-badge" id="wcag-white-aaa">—</span>
+          </div>
+        </div>
+        <div class="wcag-legend">
+          <span>AA-norm</span> <span>AA-large</span> <span>AAA</span>
+        </div>
       </div>
     </div>
   </div>
@@ -494,6 +568,61 @@
 
   function hslStr(h, s, l) {
     return `${Math.round(h)}°, ${Math.round(s)}%, ${Math.round(l)}%`;
+  }
+
+  // ─── WCAG Contrast ───
+
+  function getLuminance(r, g, b) {
+    const [rs, gs, bs] = [r, g, b].map(c => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  }
+
+  function contrastRatio(l1, l2) {
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  function wcagBadge(ratio, threshold) {
+    const el = document.createElement('span');
+    el.className = 'wcag-badge ' + (ratio >= threshold ? 'pass' : 'fail');
+    el.textContent = ratio >= threshold ? '✓' : '✗';
+    return el;
+  }
+
+  function updateWcag(r, g, b) {
+    const lum = getLuminance(r, g, b);
+    const lumBlack = 0;
+    const lumWhite = 1;
+    const crBlack = contrastRatio(lum, lumBlack);
+    const crWhite = contrastRatio(lum, lumWhite);
+
+    document.getElementById('wcag-black-ratio').textContent = crBlack.toFixed(2) + ':1';
+    document.getElementById('wcag-white-ratio').textContent = crWhite.toFixed(2) + ':1';
+
+    // AA normal text (≥4.5:1), AA large text (≥3:1), AAA (≥7:1)
+    const blackAAN = document.getElementById('wcag-black-aa-n');
+    const blackAAL = document.getElementById('wcag-black-aa-l');
+    const blackAAA = document.getElementById('wcag-black-aaa');
+    blackAAN.textContent = crBlack >= 4.5 ? '✓ AA' : '✗ AA';
+    blackAAN.className = 'wcag-badge ' + (crBlack >= 4.5 ? 'pass' : 'fail');
+    blackAAL.textContent = crBlack >= 3 ? '✓ AA-L' : '✗ AA-L';
+    blackAAL.className = 'wcag-badge ' + (crBlack >= 3 ? 'pass' : 'fail');
+    blackAAA.textContent = crBlack >= 7 ? '✓ AAA' : '✗ AAA';
+    blackAAA.className = 'wcag-badge ' + (crBlack >= 7 ? 'pass' : 'fail');
+
+    const whiteAAN = document.getElementById('wcag-white-aa-n');
+    const whiteAAL = document.getElementById('wcag-white-aa-l');
+    const whiteAAA = document.getElementById('wcag-white-aaa');
+    whiteAAN.textContent = crWhite >= 4.5 ? '✓ AA' : '✗ AA';
+    whiteAAN.className = 'wcag-badge ' + (crWhite >= 4.5 ? 'pass' : 'fail');
+    whiteAAL.textContent = crWhite >= 3 ? '✓ AA-L' : '✗ AA-L';
+    whiteAAL.className = 'wcag-badge ' + (crWhite >= 3 ? 'pass' : 'fail');
+    whiteAAA.textContent = crWhite >= 7 ? '✓ AAA' : '✗ AAA';
+    whiteAAA.className = 'wcag-badge ' + (crWhite >= 7 ? 'pass' : 'fail');
   }
 
   // ─── Palette generators ───
@@ -616,6 +745,9 @@
     labelHex.textContent = `#${upperHex}`;
     labelRgb.textContent = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
     labelHsl.textContent = hslStr(hsl.h, hsl.s, hsl.l);
+
+    // Update WCAG contrast
+    updateWcag(rgb.r, rgb.g, rgb.b);
 
     // Generate & render palettes
     container.innerHTML = '';
